@@ -14,21 +14,45 @@ namespace dotnet_rpgApi.Controllers
         }
 
         [HttpGet("GetOne/{id}")]
-        public ActionResult<Character> GetOneCharacter(int id)
+        public async Task<ActionResult<ServiceResponse<GetCharacterDto>>> GetOneCharacter(int id)
         {
-            return Ok(_characterService.GetCharacterById(id));
+            var response = await _characterService.GetCharacterById(id);
+            if (response.Success == false) {
+                return NotFound(response);
+            }
+            return Ok(response);
         }
 
         [HttpGet("GetAll")]
-        public ActionResult<List<Character>> GetCharacters()
+        public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> GetCharacters()
         {
-            return Ok(_characterService.GetAllCharacters());
+            return Ok(await _characterService.GetAllCharacters());
         }
 
         [HttpPost("Create")]
-        public ActionResult<List<Character>> CreateCharacter(Character newCharacter)
+        public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> CreateCharacter(AddCharacterDto newCharacter)
         {
-            return Ok(_characterService.CreateCharacter(newCharacter));
+            return Ok(await _characterService.CreateCharacter(newCharacter));
+        }
+
+        [HttpPut("Update")]
+        public async Task<ActionResult<ServiceResponse<GetCharacterDto>>> UpdateCharacter(UpdateCharacterDto updatedCharacter)
+        {
+            var response = await _characterService.UpdateCharacter(updatedCharacter);
+            if (response.Success == false) {
+                return NotFound(response);
+            }
+            return Ok(response);
+        }
+
+        [HttpDelete("Delete/{id}")]
+        public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> DeleteCharacter(int id)
+        {
+            var response = await _characterService.DeleteCharacter(id);
+            if (response.Success == false) {
+                return NotFound(response);
+            }
+            return Ok(response);
         }
     }
 }
