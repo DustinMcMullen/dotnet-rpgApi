@@ -9,17 +9,19 @@ namespace dotnet_rpgApi.Services.CharacterService
             new Character {Id = 1, Name = "Joe"}
         };
         private readonly IMapper _mapper;
+        private readonly DataContext _context;
 
-        public CharacterService(IMapper mapper)
+        public CharacterService(IMapper mapper, DataContext context)
         {
-            this._mapper = mapper;
+            _mapper = mapper;
+            _context = context;
         }
 
         public async Task<ServiceResponse<GetCharacterDto>> GetCharacterById(int id)
         {
             var serviceResponse = new ServiceResponse<GetCharacterDto>();
-            var character = characters.FirstOrDefault(character => character.Id == id);
-            serviceResponse.Data = _mapper.Map<GetCharacterDto>(character);
+            var dbcharacter = await _context.Characters.FirstOrDefaultAsync(character => character.Id == id);
+            serviceResponse.Data = _mapper.Map<GetCharacterDto>(dbcharacter);
             if (serviceResponse.Data == null) {
                 serviceResponse.Success = false;
                 serviceResponse.Message = "Character not found";
@@ -30,7 +32,8 @@ namespace dotnet_rpgApi.Services.CharacterService
         public async Task<ServiceResponse<List<GetCharacterDto>>> GetAllCharacters()
         {
             var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
-            serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+            var dbCharacters = await _context.Characters.ToListAsync();
+            serviceResponse.Data = dbCharacters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
             return serviceResponse;
         }
 
@@ -38,40 +41,48 @@ namespace dotnet_rpgApi.Services.CharacterService
         {
             var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
             var character = _mapper.Map<Character>(newCharacter);
-            character.Id = characters.Max(c => c.Id) + 1;
-            characters.Add( character );
-            serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+            _context.Characters.Add( character );
+            await _context.SaveChangesAsync();
+            serviceResponse.Data = await _context.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToListAsync();
             return serviceResponse;
         } 
 
         public async Task<ServiceResponse<GetCharacterDto>> UpdateCharacter(UpdateCharacterDto updatedCharacter)
         {
             var serviceResponse = new ServiceResponse<GetCharacterDto>();
-            var character = _mapper.Map<Character>(updatedCharacter);
-            var characterToUpdateId = updatedCharacter.Id;
-            var characterToUpdateIndex = characters.FindIndex(c => c.Id == characterToUpdateId);
-            if (characterToUpdateIndex == -1) {
+            var dbcharacterToUpdate = await _context.Characters.FirstOrDefaultAsync(c => c.Id == updatedCharacter.Id);
+            if (dbcharacterToUpdate is null) {
                 serviceResponse.Success = false;
                 serviceResponse.Message = "Character not found, no updates applied";
                 return serviceResponse;
             }
-            characters[characterToUpdateIndex] = character;
-            serviceResponse.Data = _mapper.Map<GetCharacterDto>(characters[characterToUpdateIndex]);
+
+            dbcharacterToUpdate.Name = updatedCharacter.Name;
+            dbcharacterToUpdate.HitPoints = updatedCharacter.HitPoints;
+            dbcharacterToUpdate.Strength = updatedCharacter.Strength;
+            dbcharacterToUpdate.Defense = updatedCharacter.Defense;
+            dbcharacterToUpdate.Intelligence = updatedCharacter.Intelligence;
+            dbcharacterToUpdate.Class = updatedCharacter.Class;
+
+            await _context.SaveChangesAsync();
+            
+            serviceResponse.Data = _mapper.Map<GetCharacterDto>(dbcharacterToUpdate);
             return serviceResponse;
         } 
 
         public async Task<ServiceResponse<List<GetCharacterDto>>> DeleteCharacter(int id)
         {
             var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
-            var characterToDeleteIndex = characters.FindIndex(c => c.Id == id);
-            if (characterToDeleteIndex == -1) {
+            var dbCharacterToDelete = await _context.Characters.FirstOrDefaultAsync(c => c.Id == id);
+            if (dbCharacterToDelete is null) {
                 serviceResponse.Success = false;
                 serviceResponse.Message = "No character found, no deletes executed";
                 return serviceResponse;
             }
-            var characterToDelete = characters[characterToDeleteIndex];
-            characters.Remove(characterToDelete);
-            serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+            _context.Characters.Remove(dbCharacterToDelete);
+            await _context.SaveChangesAsync();
+
+            serviceResponse.Data = await _context.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToListAsync();
             return serviceResponse;
         }     
     }
