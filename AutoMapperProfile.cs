@@ -1,4 +1,6 @@
 using AutoMapper;
+using dotnet_rpgApi.Dtos.Skill;
+using dotnet_rpgApi.Dtos.Weapon;
 
 namespace dotnet_rpgApi
 {
@@ -9,6 +11,8 @@ namespace dotnet_rpgApi
             CreateMap<Character, GetCharacterDto>();
             CreateMap<AddCharacterDto, Character>();
             CreateMap<UpdateCharacterDto, Character>();
+            CreateMap<Weapon, GetWeaponDto>();
+            CreateMap<Skill, GetSkillDto>();
         }
     }
 }
