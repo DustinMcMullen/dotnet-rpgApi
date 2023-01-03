@@ -4,11 +4,13 @@ global using dotnet_rpgApi.Dtos.Character;
 global using dotnet_rpgApi.Dtos.User;
 global using Microsoft.EntityFrameworkCore;
 global using dotnet_rpgApi.Data;
+global using dotnet_rpgApi.Services.FightService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Filters;
 using Microsoft.OpenApi.Models;
 using dotnet_rpgApi.Services.WeaponService;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +33,7 @@ builder.Services.AddSwaggerGen(configuration => {
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddScoped<ICharacterService, CharacterService>();
 builder.Services.AddScoped<IWeaponService, WeaponService>();
+builder.Services.AddScoped<IFightService, FightService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => 
 {
